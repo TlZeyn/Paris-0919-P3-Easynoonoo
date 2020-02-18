@@ -1,8 +1,11 @@
 import React from 'react'
+import { withRouter } from "react-router";
 
 import axios from 'axios'
 import moment from 'moment'
 import { Link } from 'react-router-dom'
+import ResultsTaux from './ResultsTaux'
+import wipe from '../assets/wipe.svg'
 
 import './FamilyAgenda.css'
 import './utils/fonts/Hansief.ttf'
@@ -21,8 +24,11 @@ let mouse = {
 	startY: 0,
 }
 let item = []
+let realTime
+let hoursCalcul
+let minCalcul
 
-export default class FamilyAgenda extends React.Component {
+class FamilyAgenda extends React.Component {
 
 	state = {
 		items: [],
@@ -48,8 +54,16 @@ export default class FamilyAgenda extends React.Component {
 		time: '',
 		setTime: false,
 		slotHours: [],
-    slotFixedHours: [],
-    valueOnClick: '',	
+		slotFixedHours: [],
+		valueOnClick: '',
+		nameStop: 0,
+		hideCalendar: false,
+		currentPathname: null,
+		currentSearch: null,
+		selectStart: [],
+		selectEnd: [],
+		tauxRepartition: [],
+		copyChild: false
 	}
 
 	/* -------- Define Mouse Position -------- */
@@ -114,8 +128,32 @@ export default class FamilyAgenda extends React.Component {
 		return findTheDay
 	}
 
-	validateSelect = () => {
+	// findDuree = () => {
+	// 	// __________________ CALCULS DES DATES ________________
 
+	// 		   let date1 = moment(this.state.items[0])
+	// 		   let minutes = this.state.minutes
+	// 		   let date2 = moment(this.state.items[1])
+	// 		   let difference = date2.diff(date1, 'minutes')
+	// 		   minutes.push(difference)
+
+	// 		   this.setState({ minutes: difference })
+	// 		   this.setState({ minutes: minutes })
+
+	// 		   let total = minutes.reduce((a, b) => a + b, 0)
+
+	// 		   // _____ CALCULS MINUTES EN HEURES
+
+	// 		   let time = total / 60
+	// 		   let min = (time % 1) * 60
+	// 		   let hours = Math.trunc(total / 60)
+
+	// 		   let realTime = hours + ' heures et ' + min + ' min'
+	// 		   this.setState({ time: realTime, setTime: true })
+	// 		// } else {
+	// }
+
+	validateSelect = () => {
 		if (this.state.items.length > 0) {
 			let items = JSON.parse(localStorage.getItem('items'))
 			if (items === null) {
@@ -123,41 +161,56 @@ export default class FamilyAgenda extends React.Component {
 					{ start: this.state.items[0], end: this.state.items[1] }
 				]
 			}
-			else {
+			else { //rajouter un if
 				if (this.state.items[0] != this.state.items[1]) {
-					items.push({ start: this.state.items[0], end: this.state.items[1] })
+
+					let startItem = this.state.items[0]
+					let endItem = this.state.items[1]
+					let dayStart = startItem.substr(0, 10)
+					let endStart = endItem.substr(0, 10)
+					let endEnd = endItem.substr(11, 6)
+					let newEnd = [dayStart + ' ' + endEnd]
+
+					if (dayStart == endStart) { // if the same day was selected in start and end
+						items.push({ start: this.state.items[0], end: this.state.items[1] })
+
+					} else {
+						items.push({ start: this.state.items[0], end: newEnd[0] })
+					}
+
 				}
 			}
+			//this.findDuree()
 
 			// alert(`Création d'une plage horaire de ${this.state.items[0]} à ${this.state.items[1]}`)
 			localStorage.setItem('items', JSON.stringify(items))
 			this.setState({ items: [] })
-			// console.log('______VALIDATE SELECT')
 
 			// __________________ CALCULS DES DATES ________________
 
-			//   let date1 = moment(this.state.items[0])
+			let minutes = this.state.minutes
+			let date1 = moment(this.state.items[0])
+			let date2 = moment(this.state.items[1]).add(15, 'minutes')
+			let test = moment(this.state.items[1]).add(15, 'minutes').format('HH:mm')
 
-			//   let minutes = this.state.minutes
-			//   let date2 = moment(this.state.items[1])
-			//   let difference = date2.diff(date1, 'minutes')
-			//   minutes.push(difference)
+			let difference = date2.diff(date1, 'minutes')
+			minutes.push(difference)
 
-			//   this.setState({ minutes: difference })
-			//   this.setState({ minutes: minutes })
+			//_____________TOTAL DES MINUTES PAR ENFANT
 
-			//   let total = minutes.reduce((a, b) => a + b, 0)
+			let total = minutes.reduce((a, b) => a + b, 0)
 
-			//   // _____ CALCULS MINUTES EN HEURES
 
-			//   let time = total / 60
-			//   let min = (time % 1) * 60
-			//   let hours = Math.trunc(total / 60)
+			// _____ CALCULS MINUTES EN HEURES
 
-			//   let realTime = hours + ' heures et ' + min + ' min'
-			//   this.setState({ time: realTime, setTime: true })
-			//   console.log('TIME', realTime) */
-			// } else {
+			let time = total / 60
+			minCalcul = (time % 1) * 60
+			hoursCalcul = Math.trunc(total / 60)
+			realTime = hoursCalcul + ' heures et ' + minCalcul + ' min'
+			this.setState({ time: realTime })
+
+
+		} else {
 			return null
 		}
 	}
@@ -169,6 +222,7 @@ export default class FamilyAgenda extends React.Component {
 		let myChild = JSON.parse(localStorage.getItem('myChild'));
 		let notMyChild = JSON.parse(localStorage.getItem('notMyChild'));
 		let arrayChildren = JSON.parse(localStorage.getItem('allChildren'));
+		let arr = ['0336ff', 'dfb593', '63cde3', '532b24', 'f65ef0', '800000']
 		let i = this.state.countMyChild;
 		let j = this.state.countNotMyChild;
 		let countId = this.state.countTimeSlot;
@@ -176,16 +230,14 @@ export default class FamilyAgenda extends React.Component {
 		let nameChildOthers = this.state.nameChildOthers;
 		let arrayObject = [];
 		let childCalendar;
-		let childColor = Math.floor(Math.random() * 16777215).toString(16);
+		let childColor = arr[Math.floor(Math.random() * arr.length)]
 		let colorState = this.state.colorState
 
-		//let arrayChildren = this.state.arrayChildren
 
 		if (i < myChild.length) { //look at the size of my Children array
 
 			if (items.length > 0) { // if the user selected some timeslot
 				nameChild = [...nameChild, myChild[i]]
-
 
 				for (let k = 0; k < items.length; k++) { // loop to generate one info object per time slot per child
 					let arrayTr = []
@@ -225,10 +277,9 @@ export default class FamilyAgenda extends React.Component {
 				childCalendar = myChild[i]
 				this.setState({ countMyChild: i })
 				this.setState({ countTimeSlot: countId })
-				this.setState({ showMyChildName: nameChild })
 				this.setState({ calendarChild: childCalendar })
 				this.setState({ colorState: childColor })
-				console.log("color dans i", colorState)
+
 			} else {
 				alert('Pas de plages horaires sélectionnées pour cet enfant')
 			};
@@ -269,16 +320,14 @@ export default class FamilyAgenda extends React.Component {
 					arrayChildren.push(...arrayObject)
 					localStorage.setItem('allChildren', JSON.stringify(arrayChildren));
 					// localStorage.setItem('items', JSON.stringify([]));
-					i++;
 					j++;
 					childCalendar = notMyChild[j]
-					this.setState({ countMyChild: i })
 					this.setState({ countNotMyChild: j })
 					this.setState({ countTimeSlot: countId })
-					this.setState({ showOthersChildName: nameChildOthers })
 					this.setState({ calendarChild: childCalendar })
 					this.setState({ colorState: childColor })
-					console.log("color dans j", colorState)
+					
+
 				} else {
 					alert('Pas de plages horaires sélectionnées pour cet enfant')
 				}
@@ -289,16 +338,21 @@ export default class FamilyAgenda extends React.Component {
 		}
 	}
 
+	
+
+
 	/* -------- reset-------- */
 
 	resetCalendar = () => {
 		localStorage.setItem('items', JSON.stringify([]))
 		this.setState({ items: [] })
+		this.setState({ minutes: [] })
 	}
 
 	addChildReset = () => {
-		this.addChild()
-		this.resetCalendar()
+		if (this.state.copyChild === true) {this.addChild()}
+		else {this.addChild()
+		this.resetCalendar()}
 	}
 
 	wipeLastSelect = () => {
@@ -309,11 +363,29 @@ export default class FamilyAgenda extends React.Component {
 
 		localStorage.setItem('items', JSON.stringify(items))
 		this.setState({ itemState: itemState })
+
+		let slotHoursState = this.state.slotHours
+		slotHoursState.pop()
+		slotHoursState.pop()
+		this.setState({ slotHours: slotHoursState })
+
+
+		let minutesState = this.state.minutes
+		minutesState.pop()
+		this.setState({ minutes: minutesState })
+
+		this.setState({ time: '' })
 	}
 
 	resetCalendarPage = () => {
 		localStorage.setItem('items', JSON.stringify([]))
 		this.setState({ items: [] })
+		this.setState({ time: '' })
+		this.setState({ slotHours: [] })
+		this.setState({ minutes: [] })
+		realTime = null
+		minCalcul = 0
+		hoursCalcul = 0
 	}
 	/* -------- Start Selection on click -------- */
 
@@ -387,24 +459,43 @@ export default class FamilyAgenda extends React.Component {
 		let strt = moment(start)
 		let endd = moment(end)
 
-		let realEnd = moment(end).add(15, 'minutes').format('HH:mm')
+		let realEnd = moment(end)
+			.add(15, 'minutes')
+			.format('HH:mm')
 		let realStart = moment(start).format('HH:mm')
 
-		let arr = endd.diff(strt) > 0 ? [start, end] : [end, start];
+		let arr = endd.diff(strt) > 0 ? [start, end] : [end, start]
 
-		this.handleRangeSelection(arr, end);
+		this.handleRangeSelection(arr, end)
 
 		this.state.slotHours.push(realStart, realEnd)
-		console.log('getSelection', this.state.slotHours);
+
+		let realAllEnd = moment(end)
+			.add(15, 'minutes')
+			.format('YYYY-MM-DD HH:mm')
+
+		this.state.selectStart.push(
+			moment(strt, moment.format).format('YYYY-MM-DD HH:mm'),
+		)
+		this.state.selectEnd.push(
+			moment(realAllEnd, moment.format).format('YYYY-MM-DD HH:mm'),
+		)
+		this.isAlreadyIn()
+		this.getSelectBis()
 	}
 
-	// <<_________________ CLEMENT MODIFIED THIS _________________
+	getSelectBis = () => {
+		this.setState({
+			SUPERday: [
+				this.findWeekDay(this.state.selectStart.slice(-1)[0]),
+			],
+			SUPERstart: [this.state.selectStart.slice(-1)[0]],
+			SUPERend: [this.state.selectEnd.slice(-1)[0]],
+		})
+	}
 
-	// handleMouseOver = (e) => {
-	// 	let yScroll = window.scrollY;
-	// 	let arr = endd.diff(strt) > 0 ? [start, end] : [end, start]
-	// 	this.handleRangeSelection(arr, end)
-	// }
+
+	// <<_________________ CLEMENT MODIFIED THIS _________________
 
 	handleMouseOver = e => {
 		let yScroll = window.scrollY
@@ -444,7 +535,7 @@ export default class FamilyAgenda extends React.Component {
 		element.style.top = horiz.top + yScroll + 'px'
 		document.body.appendChild(element)
 		element.style.fontSize = '12px';
-		element.style.textAlign = 'center';	
+		element.style.textAlign = 'center';
 	}
 
 	createSelectionDiv = () => {
@@ -488,26 +579,60 @@ export default class FamilyAgenda extends React.Component {
 				element2 = document.createElement('div')
 				element2.className = 'slot'
 				element2.style.backgroundColor = '#' + this.state.colorState
+
+
 				// element2.style.backgroundColor = 'black'
 				element2.style.width = horiz.right - horiz.left - 5 + 'px'
 				element2.style.height = vert.bottom - horiz.top + 'px'
 				element2.style.left = horiz.left + 'px'
 				element2.style.top = horiz.top + yScroll + 'px'
-        document.body.appendChild(element2)
-				console.log('________getSelect', this.state.slotHours);
-				element2.innerText = slot.start.split(' ')[1] + '\n' + slot.end.split(' ')[1];
-				element2.style.fontSize = '12px';
+				document.body.appendChild(element2)
+
+				// AFFICHAGES DES HEURES SUR SLOT
+				let realEnd = moment(slot.end).add(15, "minutes").format("HH:mm")
+				element2.innerText = slot.start.split(' ')[1] + '\n' + realEnd;
+				element2.style.fontSize = '14px';
 				element2.style.textAlign = 'center';
+				element2.style.color = "white";
+				element2.style.fontWeight = "bold";
 			})
 		}
-		// else {
-		// 	return null
-		// }
+	}
+
+	resetTime = () => {
+		this.setState({ time: null })
+	}
+
+	isAlreadyIn = async () => {
+		let alreadyIn = JSON.parse(localStorage.getItem('items'))
+
+		const mapStart = await alreadyIn.map(x => x.start)
+		const mapEnd = await alreadyIn.map(y => y.end)
+		const format = 'YYYY-MM-DD HH:mm'
+		let timeStart = moment(this.state.SUPERstart, format)
+		let timeEnd = moment(this.state.SUPERend, format)
+
+		let mapResult = await mapStart.map((startDif, index) => {
+			if (
+				timeStart.isBetween(
+					mapStart[index],
+					mapEnd[index],
+					null,
+					'[]',
+				) ||
+				timeEnd.isBetween(mapStart[index], mapEnd[index], null, '[]')
+			) {
+				var action1 = true
+			} else {
+				var action2 = true
+			}
+			if (action1 != false && action2 != true) {
+				this.wipeLastSelect()
+			}
+		})
 	}
 
 	createValidateDiv = () => {
-		console.log('_________createValidateDiv');
-
 		let slot = JSON.parse(localStorage.getItem('items'))
 		if (slot != null && document.getElementById('calendarBodyId')) {
 			if (document.getElementsByClassName('slot')) {
@@ -574,33 +699,33 @@ export default class FamilyAgenda extends React.Component {
 
 	/* this       */
 	updateChildName = () => {
-		let myChild = JSON.parse(localStorage.getItem('myChild'));
-		let notMyChild = JSON.parse(localStorage.getItem('notMyChild'));
+		let myChild = JSON.parse(localStorage.getItem('myChild'))
+		let notMyChild = JSON.parse(localStorage.getItem('notMyChild'))
 		let countMyChild = this.state.countMyChild
-		let countNotMyChild = this.state.countNotMyChild
-		let firstChild;
+		let firstChild
+		let nameStop = this.state.nameStop
 		if (this.state.calendarChild == '') {
 			firstChild = myChild[0]
 			this.setState({ calendarChild: firstChild })
+			//here for the counter of the button to send data
+			this.setState({ showMyChildName: myChild })
+			this.setState({ showOthersChildName: notMyChild })
 		}
-		if (this.state.calendarChild == undefined && countMyChild == myChild.length) { // && countMyChild - countNotMyChild == countMyChild
+		if (this.state.calendarChild == undefined && countMyChild == myChild.length && nameStop == 0) {
 
 			firstChild = notMyChild[0]
-			this.setState({countMyChild : 100}) //here to prevent the function to replay the function
-			this.setState({calendarChild: firstChild})
-		} 
-  }
-  
+			this.setState({ nameStop: 100 }) //here to prevent the function to replay the function
+			this.setState({ calendarChild: firstChild })
+		}
+	}
 
-
-  updateColor = () => {
-    let color
-	  if (this.state.colorState == '') {
-		  color = Math.floor(Math.random() * 16777215).toString(16)
-      this.setState({colorState : color})
-      console.log("don't enter here")
-	  }
-  }
+	updateColor = () => {
+		let arr = ['0336ff', 'dfb593', '63cde3', '532b24', 'f65ef0', '800000', '40b632', '44452f', '010d9e']
+		if (this.state.colorState == '') {
+			let color = arr[Math.floor(Math.random() * 6)]
+			this.setState({ colorState: color })
+		}
+	}
 
 	componentDidMount = () => {
 		// this.removeRectangle()
@@ -608,28 +733,58 @@ export default class FamilyAgenda extends React.Component {
 		// this.getSelect()
 		window.addEventListener('resize', this.updateDimensions)
 
+		const { history } = this.props;
 
+		history.listen((newLocation, action) => {
+			if (action === "PUSH") {
+				if (
+					newLocation.pathname !== this.currentPathname ||
+					newLocation.search !== this.currentSearch
+				) {
+					// Save new location
+					this.currentPathname = newLocation.pathname;
+					this.currentSearch = newLocation.search;
+
+					// Clone location object and push it to history
+					history.push({
+						pathname: newLocation.pathname,
+						search: newLocation.search
+					});
+				}
+			} else {
+				// Send user back if they try to navigate back
+				window.location.reload()
+
+
+			}
+		});
 	}
 
 	/* -------- Sending the data (allChild) to the back -------- */
 
-	sendData = () => {
+	getData = () => {
 		let timeSlotObject = JSON.parse(localStorage.getItem('allChildren'));
 
-		axios.post('http://localhost:4000/api/calculRepartition', timeSlotObject) //POST - POST => envoyer infos
+		axios.post('http://localhost:4000/api/calculsRepartition', timeSlotObject)
 			.then((res) => {
-				// console.log(res.data)
+				this.setState({ tauxRepartition: res.data })
+				console.log('state.taux',this.state.tauxRepartition);
 			}).catch((error) => {
-				// console.log(error)
-			})
-	};
+				console.log(error);
+			})		
+			
+		this.resetCalendar() //clean the slot
 
+		this.setState({ hideCalendar: true })
+	};
+	
 	render() {
+
+		const { history } = this.props;
 		this.createSelectionDiv()
 		this.createValidateDiv()
 		this.updateChildName()
 		this.updateColor()
-
 
 
 		let columns = [
@@ -705,167 +860,190 @@ export default class FamilyAgenda extends React.Component {
 
 		return (
 			<>
-				
+				{this.state.hideCalendar == true ? '' :
+					<div>
+						<h2 >Remplir la semaine-type pour {this.state.calendarChild}</h2>
+						<div>Vous avez sélectionné : {this.state.time}</div>
 
-				<div id="someTableId" className="agendaContainer row">
-					<div className="col-10">
-					<div className="selectWeek">
 
-					</div>
+						<div id="someTableId" className="agendaContainer row">
+							<div className="col-10">
+								<div className="selectWeek">
 
-					<table id='tamèreenstring' className="calendarTable" cellPadding='0' cellSpacing='0'>
 
-						<thead>
+								</div>
 
-							<tr>
-								<th className='calendarCell head first'></th>
-								{columns.map(column => {
-									return (
-										<th className='calendarCell head'>
-											<p className='headColumnName'>{column.name}</p>
-										</th>
-									)
-								})
-								}
-							</tr>
+								<table id='tamèreenstring' className="calendarTable" cellPadding='0' cellSpacing='0'>
 
-						</thead>
+									<thead>
 
-						<tbody id="calendarBodyId"
-							className="calendarTableBody"
-							onMouseDown={this.handleAllClickStarts}
-							onMouseUp={this.handleAllClickEnds}
-							onMouseOver={this.handleMouseOver}>
-
-							{rows.map((row, i) => {
-								this.createTable(row.id)
-								if (i % 2 === 0) {
-									return (
-										<>
-											<tr>
-												<th className='calendarCell time' draggable='false' rowSpan='5'>{row.hours}</th>
-											</tr>
-											{hours.map((hour) => {
+										<tr>
+											<th className='calendarCell head first'></th>
+											{columns.map(column => {
 												return (
-													<tr className="agenda__row_hour-start" draggable='false'>
-														{columns.map(column => {
-															return (
-																<td id={column.date + hour} className='calendarCell'></td>
-															)
-														})
-														}
-													</tr>
+													<th className='calendarCell head'>
+														<p className='headColumnName'>{column.name}</p>
+													</th>
 												)
 											})
 											}
-										</>
-									)
-								} else {
-									return (
-										<>
-											<tr>
-												<th className='calendarCell time' draggable='false' rowSpan='5'>{row.hours}</th>
-											</tr>
-											{hours.map((hour) => {
+										</tr>
+
+									</thead>
+
+									<tbody id="calendarBodyId"
+										className="calendarTableBody"
+										onMouseDown={this.handleAllClickStarts}
+										onMouseUp={this.handleAllClickEnds}
+										onMouseOver={this.handleMouseOver}>
+
+										{rows.map((row, i) => {
+											this.createTable(row.id)
+											if (i % 2 === 0) {
 												return (
-													<tr className="agenda__row_hour-startBis" draggable='false'>
-														{columns.map(column => {
+													<>
+														<tr>
+															<th className='calendarCell time' draggable='false' rowSpan='5'>{row.hours}</th>
+														</tr>
+														{hours.map((hour) => {
 															return (
-																<td id={column.date + hour} className='calendarCell'></td>
+																<tr className="agenda__row_hour-start" draggable='false'>
+																	{columns.map(column => {
+																		return (
+																			<td id={column.date + hour} className='calendarCell'></td>
+																		)
+																	})
+																	}
+																</tr>
 															)
 														})
 														}
-													</tr>
+													</>
 												)
-											})
+											} else {
+												return (
+													<>
+														<tr>
+															<th className='calendarCell time' draggable='false' rowSpan='5'>{row.hours}</th>
+														</tr>
+														{hours.map((hour) => {
+															return (
+																<tr className="agenda__row_hour-startBis" draggable='false'>
+																	{columns.map(column => {
+																		return (
+																			<td id={column.date + hour} className='calendarCell'></td>
+																		)
+																	})
+																	}
+																</tr>
+															)
+														})
+														}
+													</>
+												)
 											}
-										</>
-									)
-								}
-							})
-							}
-						</tbody>		
-						</table>
+										})
+										}
+									</tbody>
+								</table>
+							</div>
+							<div className="buttonSelect col-2">
+
+								<button
+									class="simulateurbtnwipe"
+									type="button"
+									value="effacer dernier"
+									onClick={() => this.wipeLastSelect()}
+								>
+									<i class="fa fa-undo"></i>
+									Effacer la dernière sélection
+								</button>
+								<button
+									class="simulateurbtnwipe"
+									type="button"
+									value="effacer"
+									onClick={() => this.resetCalendarPage()}
+								>	
+								
+								<i className="fa fa-trash-o fa-lg"></i>
+								Effacer le planning
+
+								</button>
+								
+								
+						{/* enfants en garde partagée : calendrier apparait  */}
+
+						{this.state.countMyChild + this.state.countNotMyChild == this.state.showMyChildName.length + this.state.showOthersChildName.length && this.state.countMyChild != 0 ?
+							<div className="container-fluid d-flex">
+								<div class="input-group-append">
+									<button
+										className="calendar_simulateurbtn"
+										type="button"
+										id="button-addon2"
+										value="send data and receive data"
+										onClick={() => this.getData()}
+									>
+									
+										Calculer mon taux
+                  					</button>
+								</div>
+							</div>
+
+							: <div class="container-fluid d-flex row ">
+								<div class="input-group-append row">
+								<button
+									class="calendar_simulateurbtn_validate"
+									type="button"
+									value="copier"
+									onClick={() => this.addChild()}
+								>
+									
+									Valider et copier le planning
+								</button>
+								</div>
+								<div class="input-group-append row">
+								<button
+									type="button"
+									class="calendar_simulateurbtn_validate"
+									onClick={() =>
+										
+											this.addChildReset()
+											
+									}
+								>
+									Valider
+                				</button>
+							</div>
+							</div>
+							
+						}
+
+							</div>
 						</div>
-					<div className ="buttonSelect col-2">
+
+
+
 						
-						<button
-							class="simulateurbtn"
-							type="button"
-							value="effacer dernier"
-							onClick={() => this.wipeLastSelect()}
-						>
-							Effacer dernière selection
-				</button>
-				<button
-					class="simulateurbtn"
-					type="button"
-					value="effacer"
-					onClick={() => this.resetCalendarPage()}
-				>
-				  Effacer ce planning
-				</button>
-				</div>
-			</div>
-	
-			<h1 className='h1Name'>Planning pour {this.state.calendarChild}</h1>
-		    
-      <div class="input-group">
-              <select class="custom-select" id="inputGroupSelect04" value={this.state.valueOnClick} onChange={this.handleResetPlanning}>
-			  <option
-                  selected
-                  value="null"
-                >
-                  --Merci de choisir une option--
-                </option>
-						<option
-							selected
-							value="oui"
-						>
-							Copier ce planning pour l'enfant suivant
-                </option>
-						<option value="non">
-							Non, je veux partir d'un planning vide
-                </option>
-					</select>
-					<div class="input-group-append">
-						<button
-							type="button"
-							class="calendar_simulateurbtn"
-							onClick={() =>
-								this.state.valueOnClick == 'oui'
-									? this.addChild()
-									: this.addChildReset()
-							}
-						>
-							Valider
-                </button>
-					</div>
-				</div>
-				
-				
-			  <div className ='row'>
-			  <button
-				  class="calendar_simulateurbtn_calcul"
-				  type="button"
-				  value="envoi data"
-				  onClick={() => this.sendData()}
-				>
-				  Calculer mon taux
-				</button>
 
-					</div>
 
-					<Link to="/">
-						<p
-							class="btn btn-link"
-							onMouseDown={() => this.resetCalendar()}
-						>
-							Retour aux simulateurs
+
+
+						<Link to="/">
+							<p
+								class="btn btn-link"
+								onMouseDown={() => this.resetCalendar()}
+							>
+								Retour aux simulateurs
 				</p>
-			  </Link>
-			
-		  </>
+						</Link>
+					</div>
+
+				}
+
+				{this.state.hideCalendar == true ? <ResultsTaux data={this.state.tauxRepartition} /> : ''}
+			</>
 		)
 	}
 }
+
+export default withRouter(FamilyAgenda);

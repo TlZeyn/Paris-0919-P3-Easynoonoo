@@ -7,229 +7,79 @@ import './ResultCharges.css'
 const ResultCharges = ({ results }) => {
     return (
         <div className='justify-content-center resultsCharges-parent'>
-                        
-            <table className="table">
-                <thead class="thead-dark">
-                    <tr>
-                        <th scope="col"></th>
-                        <th scope="col">Ma part</th>
-                        <th scope="col">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="row">Salaire perçu par la nounou</th>
-                        <td>{Math.round(results.netMensuelFamilleA)}</td>
-                        <td>{Math.round(results.netMensuelTotal)}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Mon coût mensuel</th>
-                        <td>{Math.round(results.coutPatronalFamilleA)}</td>
-                        
-                    </tr>
-                    <tr>
-                        <th scope="row"></th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
 
-            <table class="table">
-                <thead class="thead-dark">
-                    <tr>
-                        <th scope="col"></th>                       
-                        <th scope="col">Mois</th>
-                        <th scope="col">Année</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="row">Salaire brut</th>
-                        
-                        <td>{Math.round(results.brutMensuelFamilleA)}</td>
-                        <td>{results.brutAnnuelFamilleA}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Salaire net</th>
-                        
-                        <td>{Math.round(results.netMensuelFamilleA)}</td>
-                        <td>{results.netAnnuelFamilleA}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row"></th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                   
-                    {/* <tr>
-                        <th scope="row">Coût net de crédit et aides</th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Coût</th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Salaire</th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr> */}
-                    <tr>
-                        <th scope="row">Repas</th>
-                        
-                        <td>{Math.round(results.primePanierRepasFamilleA)}</td>
-                        <td>{Math.round(results.primePanierRepasFamilleA) * 12}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Transports</th>
-                        
-                        <td>{results.remboursementMensuelTransportFamilleA}</td>
-                        <td>{Math.round(results.remboursementMensuelTransportFamilleA * 12)}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Charges patronales</th>
-                        
-                        <td>{results.chargesPatronalesFamilleA}</td>
-                        <td>{results.chargesPatronalesFamilleA * 12}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row"></th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Crédits</th>
-                        
-                        <td>{results.creditImpotMensuelFamilleA}</td>
-                        <td>{results.creditImpotAnnuelFamilleA}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Déduction forfaitaire des charges</th>
-                        
-                        <td>{results.deductionForfaitaireChargesSocialesFamilleA}</td>
-                        <td>{results.deductionForfaitaireChargesSocialesFamilleA * 12}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Aide Paje pour les charges</th>
-                        
-                        <td>{results.aidesPajeFamilleA}</td>
-                        <td>{results.aidesPajeFamilleA * 12}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">CMG</th>
-                        
-                        <td>{results.cmgFamilleA}</td>
-                        <td>{results.cmgFamilleA * 12}</td>
-                    </tr>
-                    {/* <tr>
-                        <th scope="row">Aides additionnelles</th>
-                        
-                        <td></td>
-                        <td></td>
-                    </tr> */}
-                    <tr>
-                        <th scope="row">Crédit d'impôts</th>
-                        
-                        <td>{results.creditImpotMensuelFamilleA}</td>
-                        <td>{results.creditImpotAnnuelFamilleA}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row"></th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
+            <h3>Coûts et charges</h3>
+            <div className='lineTable'>
 
-            {/* <table class="table">
-                <thead class="thead-dark">
-                    <tr>
-                        <th scope="col">Hypothèses modifiables</th>
-                        <th scope="col"></th>
+                <div className='row d-flex justify-content-between inputTable'>
+                    <div className='col-4'>Salaire brut</div>
+                    <div className='col-4 d-flex justify-content-end'>{Math.ceil(results.brutMensuelFamilleA * 100) / 100}</div>
+                </div>
+            </div>
+            <div className='lineTable'>
+                <div className='row d-flex justify-content-between inputTable'>
+                    <div className='col-4'>Salaire net</div>
+                    <div className='col-4 d-flex justify-content-end'>{Math.ceil(results.netMensuelFamilleA * 100) / 100}</div>
+                </div>
+            </div>
+            <div className='lineTable'>
+                <div className='row d-flex justify-content-between inputTable'>
+                    <div className='col-4'>Indemnité de repas</div>
+                    <div className='col-4 d-flex justify-content-end'>{Math.ceil((results.primePanierRepasFamilleA / 12) * 100) / 100}</div>
+                </div>
+            </div>
+            <div className='lineTable'>
+                <div className='row d-flex justify-content-between inputTable'>
+                    <div className='col-4'>Charges sociales</div>
+                    <div className='col-4 d-flex justify-content-end'>{Math.ceil(((results.chargesPatronalesFamilleA + results.chargesSalarialesFamilleA)) * 100) / 100}</div>
+                </div>
+            </div>
+            <div className='lineTable'>
+                <div className='row d-flex justify-content-between inputTable'>
+                    <div className='col-4'>Coût net patronal</div>
+                    <div className='col-4 d-flex justify-content-end'>{Math.ceil(results.coutPatronalFamilleA)}</div>
+                </div>
+            </div>
 
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="row">Panier repas</th>
-                        <input type='number'></input>
-                    </tr>
-                    <tr>
-                        <th scope="row">Nb jours travaillés par semaine</th>
-                        <input type='number'></input>
-                    </tr>
-                    <tr>
-                        <th scope="row">Abonnement transports publics</th>
-                        <input type='number'></input>
-                    </tr>
-                    <tr>
-                        <th scope="row"></th>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Part garde</th>
-                        <input type='number'></input>
-                    </tr>
-                    <tr>
-                        <th scope="row">1ère année d'emploi d'un salarié à domicile</th>
-                        <select class="form-control form-control-lg">
-                            <option value={true}>oui</option>
-                            <option value={false}>non</option>
-                        </select>
-                    </tr>
-                    <tr className='align-items-center'>
-                        <th scope="row">Garde alternée</th>
-                        <select class="form-control form-control-lg">
-                            <option value={true}>oui</option>
-                            <option value={false}>non</option>
-                        </select>
-                    </tr>
-                </tbody>
-            </table> */}
+            <h3>Aides</h3>
+            <div className='lineTable'>
+                <div className='row d-flex justify-content-between inputTable'>
+                    <div className='col-4'>Aides</div>
+                    <div className='col-4 d-flex justify-content-end'>{Math.ceil(results.cmgFamilleA + results.aidesPajeFamilleA)}</div>
+                </div>
+            </div>
+            <div className='lineTable'>
+                <div className='row d-flex justify-content-between inputTable'>
+                    <div className='col-4'>Déduction forfaitaire</div>
+                    <div className='col-4 d-flex justify-content-end'>{results.deductionForfaitaireChargesSocialesFamilleA}</div>
+                </div>
+            </div>
+            <div className='lineTable'>
+                <div id='highlightedResult' className='row d-flex justify-content-between inputTable'>
+                    <div className='col-4'>Montant à payer</div>
+                    <div className='col-4 d-flex justify-content-end'>{Math.ceil(results.montantAPayerFamilleA * 100) / 100}</div>
+                </div>
+            </div>
 
-            {/* <table class="table">
-                <thead class="thead-dark">
-                    <tr>
-                        <th scope="col"></th>
-                        <th scope="col">Heures</th>
-                                                
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="row">Totales</th>
-                        <td></td>                        
-                    </tr>
-                    <tr>
-                        <th scope="row">Normales</th>
-                        <td></td>                       
-                    </tr> 
-                    <tr>
-                        <th scope="row">Dont présence responsable</th>
-                        <td></td>                       
-                    </tr>
-                    <tr>
-                        <th scope="row">Supplémentaires</th>
-                        <td></td>                       
-                    </tr>                     
-                </tbody>
-            </table> */}
+            <h3>Crédit</h3>
+            <div className='lineTable'>
+                <div className='row d-flex justify-content-between inputTable'>
+                    <div className='col-4'>Crédit d'impôts</div>
+                    <div className='col-4 d-flex justify-content-end'>{results.creditImpotMensuelFamilleA}</div>
+                </div>
+            </div>
+            <div className='lineTable'>
+                <div id='highlightedResult' className='row d-flex justify-content-between inputTable '>
+                    <div className='col-4'>Coût réel par mois</div>
+                    <div className='col-4 d-flex justify-content-end'>{Math.ceil(results.montantAPayerPostCreditImpotFamilleA * 100) / 100}</div>
+                </div>
+            </div>
 
 
-
-            {/* <Link to="/">
+            <Link to="/">
                  <p className="simFormReturn">Retour aux simulateurs</p>
-            </Link> */}
+            </Link> 
+
         </div>
     )
 }
